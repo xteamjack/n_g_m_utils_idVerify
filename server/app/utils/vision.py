@@ -85,11 +85,11 @@ class VisionProcessor:
         path = self._save_debug_image(img, "face", request_id)
         logger.info(f"Face capture saved to {path}")
 
-        # Blur Detection
+        # Blur Detection (Lenient threshold for PoC)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         blur_score = cv2.Laplacian(gray, cv2.CV_64F).var()
-        if blur_score < 100:
-            return False, "Capture is too blurry."
+        if blur_score < 50: 
+            return False, "Capture is too blurry. Please hold steady."
 
         # Face Landmark Processing
         try:
@@ -147,6 +147,42 @@ class VisionProcessor:
             "raw_text": extracted_text,
             "potential_ids": id_numbers,
             "debug_path": path
+        }
+
+    def process_combined_capture(self, image_bytes: bytes, request_id: str = "default") -> Dict[str, Any]:
+        """
+        Processes a single image containing both a face (left) and ID card (right).
+        """
+        nparr = np.frombuffer(image_bytes, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        if img is None:
+            return {"status": "error", "message": "Invalid image"}
+
+        h, w, _ = img.shape
+        half_w = w // 2
+
+        # 1. Split segments (Left = Face, Right = Card)
+        face_img = img[:, :half_w]
+        card_img = img[:, half_w:]
+
+        # Save debug images
+        self._save_debug_image(face_img, "combined_face", request_id)
+        self._save_debug_image(card_img, "combined_card", request_id)
+
+        # 2. Validate Face (Left side)
+        _, face_buffer = cv2.imencode(".jpg", face_img)
+        face_valid, face_msg = self.validate_face_capture(face_buffer.tobytes(), request_id)
+
+        # 3. Process Card (Right side)
+        _, card_buffer = cv2.imencode(".jpg", card_img)
+        card_result = self.process_id_card(card_buffer.tobytes(), "front", request_id)
+
+        return {
+            "status": "success",
+            "face_valid": face_valid,
+            "face_message": face_msg,
+            "card_result": card_result
         }
 
     def match_data(self, extracted_texts: List[str], target_data: Dict[str, Any]) -> Dict[str, Any]:

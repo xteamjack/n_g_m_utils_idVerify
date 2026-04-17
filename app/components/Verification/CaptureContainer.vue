@@ -111,30 +111,27 @@ const predictWebcam = async () => {
             const leftEye = landmarks[33];
             const rightEye = landmarks[263];
 
-            const isCenteredX = nose.x > 0.3 && nose.x < 0.7;
-            const isCenteredY = nose.y > 0.2 && nose.y < 0.8;
-            const symmetry = Math.abs((nose.x - leftEye.x) - (rightEye.x - nose.x));
-            const isLookingForward = symmetry < 0.15;
-            const faceWidth = Math.abs(rightEye.x - leftEye.x);
-            const isRightDistance = faceWidth > 0.05 && faceWidth < 0.5;
+            // --- LOOSENED HEURISTICS ---
 
-            // Log stats occasionally (every 30 frames roughly)
-            if (Math.random() < 0.05) {
-                console.log("[CaptureContainer] Stats -> NoseX:", nose.x.toFixed(2), "NoseY:", nose.y.toFixed(2), "Sym:", symmetry.toFixed(2), "Width:", faceWidth.toFixed(2));
-            }
+            const isCenteredX = nose.x > 0.15 && nose.x < 0.85; 
+            const isCenteredY = nose.y > 0.1 && nose.y < 0.9;
+            const symmetry = Math.abs((nose.x - leftEye.x) - (rightEye.x - nose.x));
+            const isLookingForward = symmetry < 0.25; // More lenient (was 0.15)
+            const faceWidth = Math.abs(rightEye.x - leftEye.x);
+            const isRightDistance = faceWidth > 0.02 && faceWidth < 0.8; // Very wide bounds
 
             // --- GUIDANCE LOGIC ---
             if (!isCenteredX || !isCenteredY) {
-                guidanceMsg.value = "Center your face in the oval";
+                guidanceMsg.value = "Adjust face position";
                 captureStatus.value = 'scanning';
             } else if (!isLookingForward) {
-                guidanceMsg.value = "Look directly at the camera";
+                guidanceMsg.value = "Look at the camera";
                 captureStatus.value = 'scanning';
             } else if (!isRightDistance) {
-                guidanceMsg.value = faceWidth < 0.05 ? "Move closer to the camera" : "Move slightly back";
+                guidanceMsg.value = "Adjust distance";
                 captureStatus.value = 'scanning';
             } else {
-                guidanceMsg.value = "Great! Hold steady...";
+                guidanceMsg.value = "Ready! Alignment focused.";
                 captureStatus.value = 'ready';
             }
         } else {

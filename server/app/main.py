@@ -139,5 +139,41 @@ async def capture_card(request_id: str, side: str, file: UploadFile = File(...))
     
     return {"status": "error", "message": "OCR Processing failed"}
 
+@app.post("/verify/capture/combined")
+async def capture_combined(request_id: str, file: UploadFile = File(...)):
+    _ensure_session(request_id)
+    
+    logger.info(f"Received combined capture for {request_id}")
+    content = await file.read()
+    
+    result = vision_processor.process_combined_capture(content, request_id)
+    
+    if result["status"] == "error":
+        raise HTTPException(status_code=400, detail=result["message"])
+        
+    if not result["face_valid"]:
+        return {"status": "rejected", "message": result["face_message"]}
+        
+    card_res = result["card_result"]
+    if card_res["status"] == "success":
+        sessions[request_id]["captures"]["face"] = "captured"
+        sessions[request_id]["captures"]["front"] = "captured"
+        sessions[request_id]["ocr_results"].extend(card_res["raw_text"])
+        
+        # Auto-match if we have target data
+        match_result = vision_processor.match_data(
+            sessions[request_id]["ocr_results"], 
+            sessions[request_id]["target_data"]
+        )
+        
+        return {
+            "status": "validated",
+            "message": "Double-verification successful",
+            "ocr": card_res,
+            "matching": match_result
+        }
+    else:
+        return {"status": "rejected", "message": "ID card could not be parsed"}
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8010)
