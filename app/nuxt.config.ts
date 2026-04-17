@@ -33,6 +33,7 @@ export default async () => {
                     }
                 },
                 components: [
+                    { path: '~/components' },
                     { path: path.resolve(projectRoot, 'n_dh_ms_fn_profileStore/app/components').replace(/\\/g, '/'), pathPrefix: false }
                 ],
                 vite: {
