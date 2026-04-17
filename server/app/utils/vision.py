@@ -56,16 +56,20 @@ class VisionProcessor:
         if not os.path.exists(self.upload_dir):
             os.makedirs(self.upload_dir, exist_ok=True)
 
-    def _save_debug_image(self, img: np.ndarray, prefix: str):
+    def _save_debug_image(self, img: np.ndarray, prefix: str, request_id: str = "default"):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        session_dir = os.path.join(self.upload_dir, request_id)
+        if not os.path.exists(session_dir):
+            os.makedirs(session_dir, exist_ok=True)
+            
         filename = f"{prefix}_{timestamp}.jpg"
-        path = os.path.join(self.upload_dir, filename)
+        path = os.path.join(session_dir, filename)
         cv2.imwrite(path, img)
         return path
 
-    def validate_face_capture(self, image_bytes: bytes) -> Tuple[bool, str]:
+    def validate_face_capture(self, image_bytes: bytes, request_id: str = "default") -> Tuple[bool, str]:
         """
-        Validates the face capture for biometric quality.
+        Validates the face capture for biometric quality and saves it to the session folder.
         """
         if not self.detector:
             logger.error("FaceLandmarker detector is None. Validation aborted.")
@@ -76,6 +80,10 @@ class VisionProcessor:
         
         if img is None:
             return False, "Invalid image format"
+
+        # Save face for reference/debug even if it might fail later
+        path = self._save_debug_image(img, "face", request_id)
+        logger.info(f"Face capture saved to {path}")
 
         # Blur Detection
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -99,9 +107,9 @@ class VisionProcessor:
             logger.error(f"Error during face processing: {e}")
             return False, "Processing error."
 
-    def process_id_card(self, image_bytes: bytes, side: str) -> Dict[str, Any]:
+    def process_id_card(self, image_bytes: bytes, side: str, request_id: str = "default") -> Dict[str, Any]:
         """
-        Uses PaddleOCR to extract information from the ID card.
+        Uses PaddleOCR to extract information from the ID card and saves to session folder.
         """
         nparr = np.frombuffer(image_bytes, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -109,7 +117,7 @@ class VisionProcessor:
         if img is None:
             return {"status": "error", "message": "Invalid image"}
 
-        path = self._save_debug_image(img, f"card_{side}")
+        path = self._save_debug_image(img, f"card_{side}", request_id)
         
         if not self.ocr:
             return {"status": "error", "message": "OCR Engine not initialized"}

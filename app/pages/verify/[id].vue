@@ -18,6 +18,13 @@ const steps = [
   { id: 'capture-back', title: 'ID Card (Back)', desc: 'Align the back side of your government-issued ID.' }
 ]
 
+const resetFlow = () => {
+    errorMessage.value = ''
+    currentStep.value = 'capture-face'
+    extractedData.value = null
+    matchResults.value = null
+}
+
 const handleCapture = async (blob: Blob) => {
     let endpoint = ''
     let queryParams = `?request_id=${requestId}`
@@ -154,9 +161,15 @@ const handleCapture = async (blob: Blob) => {
         </div>
       </div>
 
-      <div v-if="errorMessage" class="text-red-500 bg-red-500/10 border border-red-500/20 px-6 py-4 rounded-2xl flex items-center gap-4 animate-in slide-in-from-top-4">
-        <span class="font-bold underline italic">REJECTED:</span> {{ errorMessage }}
-        <button @click="errorMessage = ''" class="ml-4 opacity-50 hover:opacity-100 italic transition-all">DISMISS</button>
+      <!-- Error Message -->
+      <div v-if="errorMessage" class="text-red-500 bg-red-500/10 border border-red-500/20 px-6 py-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 animate-in slide-in-from-top-4">
+        <div class="flex items-center gap-4">
+            <span class="font-bold underline italic">REJECTED:</span> {{ errorMessage }}
+        </div>
+        <div class="flex items-center gap-2">
+            <button @click="resetFlow" class="px-4 py-2 bg-red-500 text-white text-[10px] font-bold rounded-lg hover:bg-red-600 transition-all uppercase italic">Restart Session</button>
+            <button @click="errorMessage = ''" class="px-3 py-2 bg-white/5 text-[10px] rounded-lg hover:bg-white/10 transition-all uppercase italic">Dismiss</button>
+        </div>
       </div>
     </main>
 

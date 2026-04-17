@@ -98,7 +98,7 @@ async def capture_face(request_id: str, file: UploadFile = File(...)):
     logger.info(f"Received face capture for {request_id}")
     content = await file.read()
     
-    is_valid, message = vision_processor.validate_face_capture(content)
+    is_valid, message = vision_processor.validate_face_capture(content, request_id)
     if not is_valid:
         return {"status": "rejected", "message": message}
     
@@ -116,7 +116,7 @@ async def capture_card(request_id: str, side: str, file: UploadFile = File(...))
     logger.info(f"Received {side} card capture for {request_id}")
     
     # Process OCR
-    ocr_result = vision_processor.process_id_card(content, side)
+    ocr_result = vision_processor.process_id_card(content, side, request_id)
     
     if ocr_result["status"] == "success":
         sessions[request_id]["captures"][side] = "captured"
