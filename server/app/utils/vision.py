@@ -3,44 +3,44 @@ import numpy as np
 import logging
 import os
 import re
+import urllib.request
 from datetime import datetime
 from typing import Dict, Any, Tuple, List
 from paddleocr import PaddleOCR
+import mediapipe as mp
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
 
-# Configure Logger early to avoid NameError in initialization blocks
+# Configure Logger
 logger = logging.getLogger("id-verify.vision")
-
-# Use explicit and redundant import paths to avoid AttributeError/ImportError on different OS builds
-try:
-    import mediapipe.solutions.face_mesh as mp_face_mesh
-    import mediapipe.solutions.drawing_utils as mp_drawing
-except (ImportError, AttributeError):
-    try:
-        # Fallback for some Windows/Python 3.10 builds
-        from mediapipe.python.solutions import face_mesh as mp_face_mesh
-        from mediapipe.python.solutions import drawing_utils as mp_drawing
-    except (ImportError, AttributeError):
-        logger.error("MediaPipe solutions module could not be imported through standard paths.")
-        mp_face_mesh = None
-        mp_drawing = None
 
 class VisionProcessor:
     def __init__(self):
-        # 1. Initialize Face Mesh
-        self.face_mesh = None
-        if mp_face_mesh:
+        # 1. Initialize Face Landmarker (Tasks API)
+        # We need the model file. We'll try to download it if not present.
+        model_path = "face_landmarker.task"
+        if not os.path.exists(model_path):
+            logger.info("Downloading face_landmarker.task model...")
+            model_url = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task"
             try:
-                self.face_mesh = mp_face_mesh.FaceMesh(
-                    static_image_mode=True,
-                    max_num_faces=1,
-                    refine_landmarks=True,
-                    min_detection_confidence=0.5
-                )
-                logger.info("MediaPipe FaceMesh initialized.")
+                urllib.request.urlretrieve(model_url, model_path)
+                logger.info("Model downloaded successfully.")
             except Exception as e:
-                logger.error(f"Failed to create FaceMesh: {e}")
-        else:
-            logger.error("MediaPipe FaceMesh module not found.")
+                logger.error(f"Failed to download model: {e}")
+
+        try:
+            base_options = python.BaseOptions(model_asset_path=model_path)
+            options = vision.FaceLandmarkerOptions(
+                base_options=base_options,
+                output_face_blendshapes=True,
+                num_faces=1,
+                min_face_detection_confidence=0.5
+            )
+            self.detector = vision.FaceLandmarker.create_from_options(options)
+            logger.info("MediaPipe FaceLandmarker (Tasks API) initialized.")
+        except Exception as e:
+            self.detector = None
+            logger.error(f"Failed to initialize FaceLandmarker: {e}")
         
         # 2. Initialize PaddleOCR (Lazily loaded or on first call if preferred, but doing it here for speed later)
         # Use English by default, can be extended to others ['en', 'hi', etc]
@@ -51,10 +51,10 @@ class VisionProcessor:
             logger.error(f"Failed to initialize PaddleOCR: {e}")
             self.ocr = None
 
-        # 3. Ensure uploads directory exists
-        self.upload_dir = "uploads"
+        # 3. Ensure uploads directory exists in repo root
+        self.upload_dir = r"D:\wspc3\repo\node\nuxtTrial\n_g_m_utils_idVerify\uploads"
         if not os.path.exists(self.upload_dir):
-            os.makedirs(self.upload_dir)
+            os.makedirs(self.upload_dir, exist_ok=True)
 
     def _save_debug_image(self, img: np.ndarray, prefix: str):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -67,8 +67,8 @@ class VisionProcessor:
         """
         Validates the face capture for biometric quality.
         """
-        if not self.face_mesh:
-            logger.error("FaceMesh is None. Validation aborted.")
+        if not self.detector:
+            logger.error("FaceLandmarker detector is None. Validation aborted.")
             return False, "Biometric engine failed to initialize. Please check server logs."
 
         nparr = np.frombuffer(image_bytes, np.uint8)
@@ -85,9 +85,15 @@ class VisionProcessor:
 
         # Face Landmark Processing
         try:
-            results = self.face_mesh.process(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-            if not results.multi_face_landmarks:
+            # Convert OpenCV image to MediaPipe Image
+            rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_img)
+            
+            results = self.detector.detect(mp_image)
+            
+            if not results.face_landmarks:
                 return False, "No face detected."
+                
             return True, "Face verified successfully."
         except Exception as e:
             logger.error(f"Error during face processing: {e}")

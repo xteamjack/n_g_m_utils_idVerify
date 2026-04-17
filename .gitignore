@@ -98,3 +98,10 @@ Desktop.ini
 
 # jest-hasten-map cache
 .jest-cache
+
+# ID Verification Microservice
+uploads/
+*.task
+__pycache__/
+server/venv/
+server/uploads/
