@@ -18,11 +18,48 @@ const steps = [
   { id: 'capture-back', title: 'ID Card (Back)', desc: 'Align the back side of your government-issued ID.' }
 ]
 
+// Handle the portal's handshake payload
+const query = route.query
+const payload = query.payload ? JSON.parse(decodeURIComponent(atob(query.payload as string))) : null
+const callbackUrl = payload?.callback_url
+
 const resetFlow = () => {
     errorMessage.value = ''
     currentStep.value = 'capture-face'
     extractedData.value = null
     matchResults.value = null
+}
+
+const forceVerify = async () => {
+    if (!callbackUrl) {
+        errorMessage.value = "PROTOCOL_ERROR: No callback URL provided in portal handshake."
+        return
+    }
+    
+    try {
+        currentStep.value = 'processing'
+        // Synchronized Loop: idVerifyApp -> frontend (proxy) -> backend (sink)
+        await $fetch(callbackUrl, {
+            method: 'POST',
+            body: {
+                request_id: requestId,
+                status: 'success',
+                data: [{
+                    verificationStatus: 'Verified',
+                    verificationData: { 
+                      method: 'ManualMock', 
+                      timestamp: new Date().toISOString(),
+                      refObject: payload.data?.[0]?.refObject,
+                      refId: payload.data?.[0]?.refId
+                    }
+                }]
+            }
+        })
+        currentStep.value = 'success'
+    } catch (err: any) {
+        errorMessage.value = `Callback failed: ${err.message}`
+        console.error("Verification callback failed", err)
+    }
 }
 
 const handleCapture = async (blob: Blob) => {
@@ -86,8 +123,17 @@ const handleCapture = async (blob: Blob) => {
         <div class="w-2 h-8 bg-primary rounded-full"></div>
         <h1 class="text-xl font-bold tracking-widest text-primary">SANS IDENTITY</h1>
       </div>
-      <div class="text-xs font-mono text-white/40 uppercase tracking-tighter">
-        SESSION: {{ requestId }}
+      <div class="flex items-center gap-6">
+        <button 
+          v-if="currentStep.startsWith('capture')"
+          @click="forceVerify"
+          class="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-black rounded-lg hover:bg-emerald-500 hover:text-black transition-all uppercase tracking-widest"
+        >
+          Mock Success (Dev)
+        </button>
+        <div class="text-xs font-mono text-white/40 uppercase tracking-tighter">
+          SESSION: {{ requestId }}
+        </div>
       </div>
     </header>
 
