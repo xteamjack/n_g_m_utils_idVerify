@@ -1,5 +1,6 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
+import { createApiUrl } from '@libs/utils/url'
 /**
  * verify/[id].vue
  * Main orchestrator for the identity verification flow.
@@ -79,7 +80,8 @@ const handleCapture = async (blob: Blob) => {
         const formData = new FormData()
         formData.append('file', blob, 'capture.jpg')
 
-        const result: any = await $fetch(`http://localhost:8010${endpoint}${queryParams}`, {
+        const baseUrl = createApiUrl('apps.idVerifyServer', endpoint)
+        const result: any = await $fetch(`${baseUrl}${queryParams}`, {
             method: 'POST',
             body: formData
         })

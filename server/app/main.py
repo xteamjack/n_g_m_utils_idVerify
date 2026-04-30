@@ -1,18 +1,31 @@
 import logging
+import os
+from datetime import datetime
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
 import uvicorn
 from app.utils.vision import vision_processor
+from app.utils.config import get_config
+from app.utils.banner import print_banner
+from app.utils.config_check import validate_config
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("id-verify")
 
+# 1. Resolve Config and Validate on startup
+server_cnf = get_config("apps.idVerifyServer")
+validate_config()
+
+# 2. Print Banner
+app_name = server_cnf.get("name", "ID-Verify Service") if server_cnf else "ID-Verify Service"
+print_banner(app_name, "1.0.0")
+
 app = FastAPI(
-    title="SANS-Way ID Verification Service",
-    description="Microservice for real-time user identity verification with face and government ID.",
+    title=app_name,
+    description=server_cnf.get("desc", "Identity verification microservice") if server_cnf else "Identity verification microservice",
     version="1.0.0"
 )
 
@@ -39,15 +52,21 @@ class InitRequest(BaseModel):
 @app.get("/health")
 @app.get("/api/health")
 async def health_check():
-    return {"status": "online", "service": "id-verify"}
+    return {
+        "status": "online",
+        "service": server_cnf.get("name", "id-verify"),
+        "timestamp": datetime.now().isoformat()
+    }
 
 @app.get("/api/info")
 async def get_info():
     return {
-        "app": "id-verify",
+        "app": server_cnf.get("slug", "id-verify-server"),
+        "name": server_cnf.get("name", "Identity Verify Server"),
         "version": "1.0.0",
-        "description": "User Onboarding and ID Verification microservice",
-        "tech_stack": ["Python", "FastAPI", "OpenCV", "MediaPipe", "PaddleOCR"]
+        "description": server_cnf.get("desc", "Identity verification microservice"),
+        "tech_stack": server_cnf.get("techStack", "python, fast").split(", "),
+        "environment": os.environ.get("SANS_ENV", "dev")
     }
 
 @app.post("/verify/init")
@@ -176,4 +195,15 @@ async def capture_combined(request_id: str, file: UploadFile = File(...)):
         return {"status": "rejected", "message": "ID card could not be parsed"}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8010)
+    # Resolve host and port from config server
+    host = "0.0.0.0"
+    port = 8010
+    
+    if server_cnf and "webServer" in server_cnf:
+        host = server_cnf["webServer"].get("host", host)
+        port = int(server_cnf["webServer"].get("port", port))
+        logger.info(f"Resolved server settings from Config Server: {host}:{port}")
+    else:
+        logger.warning(f"Using default server settings: {host}:{port}")
+
+    uvicorn.run(app, host=host, port=port)

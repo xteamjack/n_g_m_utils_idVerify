@@ -5,7 +5,8 @@ export default (baseEnv: EnvVarSchema[], baseService: ServiceDependencySchema[])
         envSchema: [...baseEnv],
         serviceSchema: [
             ...baseService,
-            { key: 'apps.profileStore', type: 'service' }
+            { appKey: 'apps.profileStore', mandatory: false },
+            { appKey: 'apps.idVerifyServer', mandatory: true }
         ]
     };
 };

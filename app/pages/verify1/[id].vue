@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { createApiUrl } from '@libs/utils/url'
 /**
  * verify1/[id].vue
  * Streamlined variant: Combines Face and ID Front capture into one side-by-side photo.
@@ -39,7 +40,8 @@ const handleCapture = async (blob: Blob) => {
         const formData = new FormData()
         formData.append('file', blob, 'capture.jpg')
 
-        const result: any = await $fetch(`http://localhost:8010${endpoint}${queryParams}`, {
+        const apiUrl = createApiUrl('apps.idVerifyServer', endpoint)
+        const result: any = await $fetch(`${apiUrl}${queryParams}`, {
             method: 'POST',
             body: formData
         })

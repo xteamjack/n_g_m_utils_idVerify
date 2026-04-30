@@ -10,6 +10,7 @@ from paddleocr import PaddleOCR
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+from .config import get_config
 
 # Configure Logger
 logger = logging.getLogger("id-verify.vision")
@@ -51,8 +52,21 @@ class VisionProcessor:
             logger.error(f"Failed to initialize PaddleOCR: {e}")
             self.ocr = None
 
-        # 3. Ensure uploads directory exists in repo root
-        self.upload_dir = r"D:\wspc3\repo\node\nuxtTrial\n_g_m_utils_idVerify\uploads"
+        # 3. Ensure uploads directory exists (Decoupled via Config Server)
+        # Fetch from config key: storage.docs.idVerify
+        config_storage = get_config("storage.docs.idVerify")
+        
+        if not config_storage or not isinstance(config_storage, dict):
+            # This case should be caught by validate_config() on startup
+            raise RuntimeError("Critical Configuration 'storage.docs.idVerify' is missing or invalid.")
+
+        self.upload_dir = config_storage.get("options", {}).get("location")
+        
+        if not self.upload_dir:
+            raise RuntimeError("Storage location not defined in 'storage.docs.idVerify'")
+
+        logger.info(f"Resolved upload directory: {self.upload_dir}")
+
         if not os.path.exists(self.upload_dir):
             os.makedirs(self.upload_dir, exist_ok=True)
 
