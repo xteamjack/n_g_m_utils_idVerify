@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 definePageMeta({ layout: false })
 import { createApiUrl } from '@libs/utils/url'
 /**
@@ -122,7 +122,7 @@ const handleCapture = async (blob: Blob) => {
   <div class="min-h-screen bg-[#050505] text-white flex flex-col font-sans selection:bg-primary selection:text-black">
     <!-- Premium Backdrop Glow -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] animate-pulse"></div>
+        <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] motion-safe:animate-pulse"></div>
         <div class="absolute top-[20%] -right-[10%] w-[30%] h-[30%] bg-blue-500/5 rounded-full blur-[100px]"></div>
     </div>
 
@@ -133,7 +133,7 @@ const handleCapture = async (blob: Blob) => {
           <div class="flex justify-between items-end px-2">
               <div v-for="(s, index) in steps" :key="s.id" class="flex flex-col gap-2">
                   <span 
-                    class="text-[9px] font-black uppercase tracking-widest transition-colors duration-500"
+                    class="text-[9px] font-black uppercase tracking-widest motion-safe:transition-colors duration-500"
                     :class="currentStep === s.id ? 'text-primary' : 'text-white/20'"
                   >
                     0{{ index + 1 }}
@@ -143,7 +143,7 @@ const handleCapture = async (blob: Blob) => {
           <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden flex p-0.5">
             <div 
                 v-for="(s, index) in steps" :key="s.id"
-                class="h-full transition-all duration-700 rounded-full"
+                class="h-full motion-safe:transition-all duration-700 rounded-full"
                 :style="{ width: '33.33%' }"
                 :class="[
                     currentStep === s.id ? 'bg-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.4)]' : 
@@ -154,7 +154,7 @@ const handleCapture = async (blob: Blob) => {
       </div>
 
       <!-- Capture Container -->
-      <div v-if="currentStep.startsWith('capture')" class="w-full space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
+      <div v-if="currentStep.startsWith('capture')" class="w-full space-y-10 motion-safe:animate-in fade-in slide-in-from-bottom-8 duration-700">
         <div class="text-center space-y-3">
             <h2 class="text-4xl font-black italic tracking-tighter uppercase leading-none">{{ steps.find(s => s.id === currentStep)?.title }}</h2>
             <p class="text-white/40 text-[11px] font-bold uppercase tracking-[0.2em]">{{ steps.find(s => s.id === currentStep)?.desc }}</p>
@@ -171,10 +171,10 @@ const handleCapture = async (blob: Blob) => {
       </div>
 
       <!-- Processing State -->
-      <div v-else-if="currentStep === 'processing'" class="text-center space-y-10 py-20 animate-in fade-in duration-700">
+      <div v-else-if="currentStep === 'processing'" class="text-center space-y-10 py-20 motion-safe:animate-in fade-in duration-700">
         <div class="relative w-40 h-40 mx-auto">
             <div class="absolute inset-0 border-2 border-primary/10 rounded-full"></div>
-            <div class="absolute inset-0 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <div class="absolute inset-0 border-2 border-primary border-t-transparent rounded-full motion-safe:animate-spin"></div>
             <div class="absolute inset-4 border border-white/5 rounded-full flex items-center justify-center">
                 <span class="text-primary font-black italic tracking-tighter text-xl">SANS</span>
             </div>
@@ -193,9 +193,9 @@ const handleCapture = async (blob: Blob) => {
       </div>
 
       <!-- Result States -->
-      <div v-else-if="currentStep === 'success'" class="text-center space-y-8 max-w-xl py-10 animate-in zoom-in-95 duration-500">
+      <div v-else-if="currentStep === 'success'" class="text-center space-y-8 max-w-xl py-10 motion-safe:animate-in zoom-in-95 duration-500">
         <div class="relative w-32 h-32 mx-auto">
-            <div class="absolute inset-0 bg-emerald-500/20 rounded-full blur-2xl animate-pulse"></div>
+            <div class="absolute inset-0 bg-emerald-500/20 rounded-full blur-2xl motion-safe:animate-pulse"></div>
             <div class="w-full h-full bg-white/[0.03] border border-emerald-500/30 rounded-full flex items-center justify-center relative">
                 <div class="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.4)]">
                     <svg class="w-8 h-8 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4">
@@ -246,7 +246,7 @@ const handleCapture = async (blob: Blob) => {
       </div>
 
       <!-- Error Message -->
-      <div v-if="errorMessage" class="w-full max-w-2xl bg-red-500/10 border border-red-500/20 px-8 py-6 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6 animate-in slide-in-from-top-8 backdrop-blur-xl">
+      <div v-if="errorMessage" class="w-full max-w-2xl bg-red-500/10 border border-red-500/20 px-8 py-6 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6 motion-safe:animate-in slide-in-from-top-8 backdrop-blur-xl">
         <div class="flex items-center gap-6">
             <div class="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center shrink-0">
                 <AlertTriangle class="w-6 h-6 text-red-500" />
@@ -257,8 +257,8 @@ const handleCapture = async (blob: Blob) => {
             </div>
         </div>
         <div class="flex items-center gap-3">
-            <button @click="resetFlow" class="px-6 py-2.5 bg-red-500 text-white text-[10px] font-black rounded-xl hover:bg-red-600 transition-all uppercase tracking-widest active:scale-95 shadow-lg shadow-red-500/20">Restart</button>
-            <button @click="errorMessage = ''" class="px-5 py-2.5 bg-white/5 text-[10px] font-bold rounded-xl hover:bg-white/10 transition-all uppercase tracking-widest text-white/40">Dismiss</button>
+            <button @click="resetFlow" class="px-6 py-2.5 bg-red-500 text-white text-[10px] font-black rounded-xl hover:bg-red-600 motion-safe:transition-all uppercase tracking-widest active:scale-95 shadow-lg shadow-red-500/20">Restart</button>
+            <button @click="errorMessage = ''" class="px-5 py-2.5 bg-white/5 text-[10px] font-bold rounded-xl hover:bg-white/10 motion-safe:transition-all uppercase tracking-widest text-white/40">Dismiss</button>
         </div>
       </div>
     </main>
@@ -267,7 +267,7 @@ const handleCapture = async (blob: Blob) => {
 
 <style scoped>
 .sans-action-btn {
-  @apply bg-primary text-black font-black italic px-10 py-4 rounded-full hover:bg-white transition-all transform hover:scale-105 inline-flex items-center gap-3 shadow-xl shadow-primary/20 cursor-pointer;
+  @apply bg-primary text-black font-black italic px-10 py-4 rounded-full hover:bg-white motion-safe:transition-all transform hover:scale-105 inline-flex items-center gap-3 shadow-xl shadow-primary/20 cursor-pointer;
 }
 
 .glass-container {
@@ -296,7 +296,7 @@ const handleCapture = async (blob: Blob) => {
 </style>
 
 <style scoped>
-.sans-button-primary {
-  @apply bg-primary text-black font-black italic px-8 py-3 rounded-full hover:bg-white transition-all transform hover:scale-105;
+.sans-btn sans-btn--primary {
+  @apply bg-primary text-black font-black italic px-8 py-3 rounded-full hover:bg-white motion-safe:transition-all transform hover:scale-105;
 }
 </style>

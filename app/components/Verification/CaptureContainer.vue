@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { 
   FaceLandmarker, 
   FilesetResolver,
@@ -188,7 +188,7 @@ const handleCapture = () => {
     <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
       <!-- Face Template Overlay -->
       <div v-if="mode === 'face'" 
-        class="w-72 h-96 border-[3px] rounded-[100%] transition-all duration-500 flex flex-col items-center justify-center p-8 text-center"
+        class="w-72 h-96 border-[3px] rounded-[100%] motion-safe:transition-all duration-500 flex flex-col items-center justify-center p-8 text-center"
         :class="captureStatus === 'ready' 
             ? 'border-primary shadow-[0_0_60px_rgba(var(--color-primary-rgb),0.4)] scale-105' 
             : 'border-white/20'"
@@ -199,7 +199,7 @@ const handleCapture = () => {
       
       <!-- Card Template Overlay -->
       <div v-else 
-        class="w-[80%] h-[60%] border-[3px] rounded-3xl transition-all duration-500 flex items-center justify-center"
+        class="w-[80%] h-[60%] border-[3px] rounded-3xl motion-safe:transition-all duration-500 flex items-center justify-center"
         :class="captureStatus === 'ready' ? 'border-primary shadow-[0_0_60px_rgba(var(--color-primary-rgb),0.4)]' : 'border-white/20'"
       >
         <div class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Place Card in Frame</div>
@@ -214,28 +214,28 @@ const handleCapture = () => {
         <button 
             @click="handleCapture"
             :disabled="captureStatus !== 'ready' && mode === 'face'"
-            class="mt-8 relative group active:scale-95 transition-all outline-none"
+            class="mt-8 relative group active:scale-95 motion-safe:transition-all outline-none"
             :class="{ 
                 'opacity-20 cursor-not-allowed': captureStatus !== 'ready' && mode === 'face',
-                'animate-pulse-slow': captureStatus === 'ready'
+                'motion-safe:animate-pulse-slow': captureStatus === 'ready'
             }"
         >
             <!-- Camera Ring -->
-            <div class="w-20 h-20 rounded-full border-4 flex items-center justify-center transition-all duration-500"
+            <div class="w-20 h-20 rounded-full border-4 flex items-center justify-center motion-safe:transition-all duration-500"
                 :class="captureStatus === 'ready' 
                     ? 'border-primary shadow-[0_0_40px_rgba(var(--color-primary-rgb),0.6)] scale-110' 
                     : 'border-white/20'"
             >
                 <!-- Inner Button -->
                 <div 
-                    class="w-14 h-14 rounded-full transition-all transform duration-300 shadow-inner"
+                    class="w-14 h-14 rounded-full motion-safe:transition-all transform duration-300 shadow-inner"
                     :class="[
                         captureStatus === 'ready' ? 'bg-primary scale-100 shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.5)]' : 'bg-white/10 scale-90',
                         captureStatus === 'processing' ? 'scale-0 opacity-0' : 'opacity-100'
                     ]"
                 ></div>
                 <!-- Processing Spinner -->
-                <div v-if="captureStatus === 'processing'" class="absolute w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <div v-if="captureStatus === 'processing'" class="absolute w-12 h-12 border-4 border-primary border-t-transparent rounded-full motion-safe:animate-spin"></div>
             </div>
         </button>
     </div>
@@ -249,7 +249,7 @@ const handleCapture = () => {
             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
         </div>
         <p class="text-red-400 font-bold italic tracking-tight">{{ errorMsg }}</p>
-        <button @click="window.location.reload()" class="sans-button-secondary text-xs">RETRY ACCESS</button>
+        <button @click="window.location.reload()" class="sans-btn sans-btn--outline text-xs">RETRY ACCESS</button>
     </div>
   </div>
 </template>
@@ -264,7 +264,7 @@ const handleCapture = () => {
   50% { transform: scale(1.05); opacity: 0.9; }
 }
 
-.animate-pulse-slow {
+.motion-safe:animate-pulse-slow {
   animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 </style>
