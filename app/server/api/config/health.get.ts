@@ -8,7 +8,7 @@ import { getConfigByKey } from '@libs/core/config';
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event);
   const configServer = config.public?.configServer || config.configServer;
-  const apiToken = config.apiToken || 'test-token-12345';
+  const svcApiKey = (config as any).svcApiKey;
 
   if (!configServer) {
     throw createError({
@@ -37,11 +37,10 @@ export default defineEventHandler(async (event) => {
 
       const targetUrl = `${app.webServer.url.replace(/\/$/, '')}/api/health`;
       
+      const headers: Record<string, string> = { 'Accept': 'application/json' };
+      if (svcApiKey) headers['Authorization'] = `Bearer ${svcApiKey}`;
       const res = await fetch(targetUrl, {
-        headers: { 
-          'Authorization': `Bearer ${apiToken}`,
-          'Accept': 'application/json'
-        },
+        headers,
         signal: controller.signal
       });
 
