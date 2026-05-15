@@ -1,0 +1,19 @@
+# Build hygiene for Python contexts.
+# Without this, COPY . . brings the host venv (Windows binaries) into
+# the slim-linux container, which crashes for any compiled extensions.
+venv
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.git
+.gitignore
+.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db

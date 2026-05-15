@@ -1,0 +1,16 @@
+# Build hygiene — keep host artifacts out of the Docker build context.
+# Without this, COPY . . in Dockerfile.nuxt overwrites the alpine-installed
+# node_modules with the host (Windows) ones, which crashes for native deps
+# like better-sqlite3 (Exec format error).
+node_modules
+.nuxt
+.output
+.next
+dist
+.git
+.gitignore
+.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db
