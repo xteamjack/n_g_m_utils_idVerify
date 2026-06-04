@@ -1,11 +1,11 @@
 import { navigateTo, abortNavigation } from '#app';
-import { sansAuthInterceptor } from '@libs/web/interceptors';
+import { sansCookieAuthInterceptor } from '@libs/web/interceptors';
 
 export default defineNuxtRouteMiddleware(async (to) => {
     if (to.path.startsWith('/api')) return;
     console.log(`[AUTH-MW] customer - Navigating to: ${to.path}`);
     
-    const result = await sansAuthInterceptor(to);
+    const result = await sansCookieAuthInterceptor(to);
     
     if (result === false) {
         console.warn(`[AUTH-MW] customer - Navigation aborted for: ${to.path}`);
