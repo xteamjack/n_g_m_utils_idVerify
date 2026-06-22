@@ -13,7 +13,10 @@ export default <Partial<Config>>{
     './layouts/**/*.vue',
     './pages/**/*.vue',
     './app.vue',
-    path.join(libsRoot, 'ui/components/**/*.{vue,js,ts}').replace(/\\/g, '/'),
-    path.join(libsRoot, 'ui/layouts/**/*.vue').replace(/\\/g, '/')
+    // Scan the WHOLE shared UI layer (not just components/layouts) so
+    // `@layer components` classes used in ui/pages (ApplicationPage) +
+    // ui/decorators — e.g. .sans-page-header-icon — are not purged by
+    // Tailwind v3. Mirrors n_dh_ms_fn_recruiter.
+    path.join(libsRoot, 'ui/**/*.{vue,js,ts}').replace(/\\/g, '/')
   ]
 }
