@@ -25,6 +25,14 @@ export default async () => {
             envSchema,
             serviceSchema,
             overrides: {
+                // Brand default: DigiHire / GuildTrek apps render in light mode.
+                // Replaces the shared dark default in libs/utils/nuxt-config.ts.
+                // The theme toggle still lets users switch to dark.
+                colorMode: {
+                    classSuffix: '',
+                    preference: 'light',
+                    fallback: 'light'
+                },
                 modules: ["@nuxtjs/tailwindcss", "@nuxtjs/color-mode"],
                 tailwindcss: { configPath: 'tailwind.config.ts' },
                 runtimeConfig: {
