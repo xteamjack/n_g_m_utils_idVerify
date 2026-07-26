@@ -206,4 +206,9 @@ if __name__ == "__main__":
     else:
         logger.warning(f"Using default server settings: {host}:{port}")
 
+    # SANS_BIND_HOST (e.g. 0.0.0.0, set in sans-env) overrides the config host
+    # (127.0.0.1) for the LISTEN address only, so the server is reachable across
+    # the LAN. Mirrors the other Python services' SANS_BIND_HOST convention.
+    host = os.environ.get("SANS_BIND_HOST") or host
+
     uvicorn.run(app, host=host, port=port)
