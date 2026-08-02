@@ -9,8 +9,10 @@ SETLOCAL ENABLEDELAYEDEXPANSION
 SET "SERVER_DIR=%~dp0"
 cd /d "%SERVER_DIR%"
 
-:: Resolve the path to the sans-env.bat utility script
-SET "SANS_ENV_BAT=%SERVER_DIR%..\..\utils\scripts\sans-env.bat"
+:: Resolve the path to the sans-env.bat utility script. This script lives at
+:: <repoRoot>\<category>\<app>\server\, so the repo root (which holds
+:: utils\scripts) is THREE levels up from SERVER_DIR (post category-reorg).
+SET "SANS_ENV_BAT=%SERVER_DIR%..\..\..\utils\scripts\sans-env.bat"
 
 IF EXIST "%SANS_ENV_BAT%" (
     echo [setup] Sourcing environment variables from %SANS_ENV_BAT%...
